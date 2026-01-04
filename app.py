@@ -16,6 +16,24 @@ except ImportError:
 
 app = Flask(__name__)
 
+@app.before_request
+def restrict_to_lark_app():
+    """Restricts access to Lark/Feishu clients only."""
+    # Allow health checks interactions
+    if request.path == '/health':
+        return None
+
+    # Check User-Agent
+    ua = request.headers.get('User-Agent', '')
+    if 'Lark' not in ua and 'Feishu' not in ua:
+        return """
+        <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+            <h1>Access Restricted</h1>
+            <p>This tool is only accessible internally within the Lark / Feishu Suite.</p>
+            <p style="color: gray;">Please open this app from your Workspace.</p>
+        </div>
+        """, 403
+
 @app.route('/', methods=['GET'])
 def index():
     """Renders the frontend UI."""
