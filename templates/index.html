@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Image Converter</title>
+    <style>
+        :root {
+            --primary-color: #3370ff; /* Lark Blue */
+            --bg-color: #f5f6f7;
+            --card-bg: #ffffff;
+            --text-color: #1f2329;
+            --text-secondary: #8f959e;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+
+        .upload-area {
+            border: 2px dashed #dee0e3;
+            border-radius: var(--border-radius);
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(51, 112, 255, 0.04);
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        .file-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--text-color);
+            font-weight: 500;
+            display: none;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .options {
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dee0e3;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 24px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #2e62e6;
+        }
+
+        button:disabled {
+            background-color: #bbbfc4;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            min-height: 20px;
+        }
+        
+        .error {
+            color: #f54a45;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>PDF to Image Converter</h1>
+        
+        <form id="convertForm">
+            <div class="upload-area" id="dropZone">
+                <div class="upload-icon">📄</div>
+                <div style="color: var(--text-secondary); font-size: 14px;">Click or Drop PDF here</div>
+                <div class="file-info" id="fileInfo"></div>
+                <input type="file" id="fileInput" name="file" accept=".pdf" required>
+            </div>
+
+            <div class="options">
+                <label for="dpi">Image Quality (DPI)</label>
+                <select name="dpi" id="dpi">
+                    <option value="72">72 (Screen)</option>
+                    <option value="150">150 (Good)</option>
+                    <option value="200" selected>200 (High)</option>
+                    <option value="300">300 (Print)</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submitBtn" disabled>Convert & Download</button>
+        </form>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const submitBtn = document.getElementById('submitBtn');
+        const dropZone = document.getElementById('dropZone');
+        const form = document.getElementById('convertForm');
+        const status = document.getElementById('status');
+
+        // Handle File Selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            updateFileDisplay(file);
+        });
+
+        // Drag and Drop effects
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            dropZone.classList.remove('dragover');
+        });
+
+        function updateFileDisplay(file) {
+            if (file) {
+                if (file.type !== 'application/pdf') {
+                    fileInfo.textContent = "Error: Please select a PDF file";
+                    fileInfo.classList.add('error');
+                    fileInfo.style.display = 'block';
+                    submitBtn.disabled = true;
+                    return;
+                }
+                fileInfo.textContent = file.name;
+                fileInfo.classList.remove('error');
+                fileInfo.style.display = 'block';
+                submitBtn.disabled = false;
+            } else {
+                fileInfo.style.display = 'none';
+                submitBtn.disabled = true;
+            }
+        }
+
+        // Handle Submit
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            status.textContent = "Converting... this may take a moment.";
+            status.classList.remove('error');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Processing...";
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Conversion failed');
+                }
+
+                // Create a blob from the response
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                
+                // Get filename from header or default
+                let filename = "images.zip";
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) { 
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                status.textContent = "Done! Download started.";
+                submitBtn.textContent = "Convert Another";
+                submitBtn.disabled = false;
+                
+            } catch (error) {
+                console.error(error);
+                status.textContent = "Error: " + error.message;
+                status.classList.add('error');
+                submitBtn.textContent = "Try Again";
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

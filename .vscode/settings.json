@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/13c13b5a-f754-4fff-9a8f-7e1c46003fa9/resourceGroups/rg-pdf-converter/providers/Microsoft.Web/sites/my-pdf-tool-lark",
+    "appService.deploySubpath": "."
+}

@@ -1,7 +1,7 @@
 import os
 import io
 import zipfile
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 
 # -----------------------------------------------------------------------------
 # PREREQUISITES for Web/Lark:
@@ -15,6 +15,11 @@ except ImportError:
     raise ImportError("PyMuPDF is missing. Run: pip install pymupdf")
 
 app = Flask(__name__)
+
+@app.route('/', methods=['GET'])
+def index():
+    """Renders the frontend UI."""
+    return render_template('index.html')
 
 @app.route('/health', methods=['GET'])
 def health_check():
