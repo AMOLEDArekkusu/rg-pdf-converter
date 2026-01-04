@@ -7,19 +7,26 @@
     <title>PDF to Image Converter</title>
     <style>
         :root {
-            --primary-color: #3370ff;
-            /* Lark Blue */
-            --bg-color: #f5f6f7;
-            --card-bg: #ffffff;
-            --text-color: #1f2329;
-            --text-secondary: #8f959e;
-            --border-radius: 8px;
+            --primary: #3370ff;
+            --primary-hover: #285dc9;
+            --bg: #f5f6f7;
+            --surface: #ffffff;
+            --text-main: #1f2329;
+            --text-sub: #646a73;
+            --border: #dee0e3;
+            --radius: 12px;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,221 +35,366 @@
             padding: 20px;
         }
 
-        .container {
-            background-color: var(--card-bg);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        .card {
+            background: var(--surface);
+            padding: 40px 32px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
+            transition: transform 0.2s ease;
+        }
+
+        .header {
             text-align: center;
+            margin-bottom: 32px;
         }
 
         h1 {
-            font-size: 20px;
-            margin-bottom: 24px;
+            font-size: 24px;
             font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text-main);
         }
 
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        /* Upload Area */
         .upload-area {
-            border: 2px dashed #dee0e3;
-            border-radius: var(--border-radius);
-            padding: 30px 20px;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 40px 20px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
+            background: #fafafa;
         }
 
         .upload-area:hover,
         .upload-area.dragover {
-            border-color: var(--primary-color);
-            background-color: rgba(51, 112, 255, 0.04);
+            border-color: var(--primary);
+            background: rgba(51, 112, 255, 0.04);
         }
 
-        .upload-icon {
-            font-size: 32px;
-            color: var(--primary-color);
-            margin-bottom: 12px;
+        .upload-area.has-file {
+            border-style: solid;
+            background: rgba(51, 112, 255, 0.04);
+            border-color: var(--primary);
         }
 
-        .file-info {
-            margin-top: 10px;
-            font-size: 14px;
-            color: var(--text-color);
+        .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .upload-text {
+            font-size: 15px;
             font-weight: 500;
-            display: none;
+            color: var(--text-main);
+            pointer-events: none;
+        }
+
+        .upload-subtext {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-top: 4px;
+            pointer-events: none;
         }
 
         input[type="file"] {
             position: absolute;
-            width: 100%;
-            height: 100%;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             opacity: 0;
             cursor: pointer;
         }
 
-        .options {
+        /* Form Controls */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
             margin-top: 24px;
-            text-align: left;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
         }
 
         label {
-            font-size: 14px;
-            color: var(--text-secondary);
-            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-sub);
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #dee0e3;
-            border-radius: 4px;
+            appearance: none;
+            background: var(--bg);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 10px 12px;
             font-size: 14px;
-            outline: none;
+            color: var(--text-main);
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23646a73%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
         }
 
-        button {
-            background-color: var(--primary-color);
+        select:hover {
+            background-color: #ebedf0;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 2px rgba(51, 112, 255, 0.2);
+        }
+
+        /* Checkbox */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            margin-top: 16px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper:hover {
+            background: #eff0f1;
+        }
+
+        input[type="checkbox"] {
+            margin: 0 12px 0 0;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: var(--text-main);
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .checkbox-hint {
+            display: block;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 2px;
+            font-weight: normal;
+        }
+
+        /* Action Button */
+        button.cta {
+            background: var(--primary);
             color: white;
             border: none;
-            width: 100%;
-            padding: 10px;
-            border-radius: 4px;
+            border-radius: 8px;
+            padding: 14px;
             font-size: 16px;
-            margin-top: 24px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 32px;
             cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(51, 112, 255, 0.2);
         }
 
-        button:hover {
-            background-color: #2e62e6;
+        button.cta:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(51, 112, 255, 0.3);
         }
 
-        button:disabled {
-            background-color: #bbbfc4;
+        button.cta:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button.cta:disabled {
+            background-color: #bbc0c9;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
-        .status {
-            margin-top: 16px;
+        /* Status */
+        .status-msg {
+            margin-top: 20px;
             font-size: 14px;
-            color: var(--text-secondary);
+            text-align: center;
             min-height: 20px;
+            color: var(--text-sub);
         }
 
-        .error {
-            color: #f54a45;
+        .status-msg.error {
+            color: #d93025;
+        }
+
+        .status-msg.success {
+            color: #1e8e3e;
+        }
+
+        /* Loader */
+        .loader {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 32px 20px;
+                box-shadow: none;
+                background: transparent;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
-        <h1>PDF to Image Converter</h1>
+    <div class="card">
+        <div class="header">
+            <h1>PDF Converter</h1>
+            <div class="subtitle">Fast, secure, and formats-ready</div>
+        </div>
 
         <form id="convertForm">
             <div class="upload-area" id="dropZone">
-                <div class="upload-icon">📄</div>
-                <div style="color: var(--text-secondary); font-size: 14px;">Click or Drop PDF here</div>
-                <div class="file-info" id="fileInfo"></div>
+                <span class="icon">📄</span>
+                <div class="upload-text">Choose PDF File</div>
+                <div class="upload-subtext" id="fileName">or drag and drop here</div>
                 <input type="file" id="fileInput" name="file" accept=".pdf" required>
             </div>
 
-            <div class="options">
-                <div style="margin-bottom: 15px;">
-                    <label for="format">Output Format</label>
+            <div class="controls-grid">
+                <div class="form-group">
+                    <label for="format">Format</label>
                     <select name="format" id="format">
-                        <option value="png" selected>PNG (Best Quality)</option>
-                        <option value="jpg">JPEG (Smallest Size)</option>
+                        <option value="png" selected>PNG (Image)</option>
+                        <option value="jpg">JPEG (Small)</option>
                         <option value="svg">SVG (Vector)</option>
                     </select>
                 </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label for="dpi">Image Quality (DPI)</label>
+                <div class="form-group">
+                    <label for="dpi">Quality</label>
                     <select name="dpi" id="dpi">
-                        <option value="72">72 (Screen)</option>
-                        <option value="150">150 (Good)</option>
-                        <option value="200" selected>200 (High)</option>
-                        <option value="300">300 (Print)</option>
+                        <option value="72">Screen (72)</option>
+                        <option value="150">Good (150)</option>
+                        <option value="200" selected>High (200)</option>
+                        <option value="300">Print (300)</option>
                     </select>
-                </div>
-
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <input type="checkbox" id="use_zip" name="use_zip" value="true" checked
-                        style="width: auto; position: static; opacity: 1; cursor: pointer; margin-right: 10px;">
-                    <label for="use_zip" style="margin: 0; cursor: pointer;">Download as ZIP</label>
-                </div>
-                <div style="font-size: 12px; color: #8f959e;">
-                    * Single page documents can be downloaded directly if ZIP is unchecked.
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn" disabled>Convert & Download</button>
+            <label class="checkbox-wrapper" for="use_zip">
+                <input type="checkbox" id="use_zip" name="use_zip" value="true" checked>
+                <div class="checkbox-label">
+                    Download as ZIP
+                    <span class="checkbox-hint">Uncheck to download single pages directly</span>
+                </div>
+            </label>
+
+            <button type="submit" class="cta" id="submitBtn" disabled>
+                Convert PDF
+            </button>
         </form>
 
-        <div class="status" id="status"></div>
+        <div class="status-msg" id="status"></div>
     </div>
 
     <script>
         const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const submitBtn = document.getElementById('submitBtn');
+        const fileNameDisplay = document.getElementById('fileName');
+        const uploadText = document.querySelector('.upload-text');
         const dropZone = document.getElementById('dropZone');
+        const submitBtn = document.getElementById('submitBtn');
         const form = document.getElementById('convertForm');
         const status = document.getElementById('status');
 
-        // Handle File Selection
+        // File Selection Logic
         fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            updateFileDisplay(file);
+            handleFile(e.target.files[0]);
         });
 
-        // Drag and Drop effects
+        // Drag & Drop
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('dragover');
         });
-
         dropZone.addEventListener('dragleave', () => {
             dropZone.classList.remove('dragover');
         });
-
         dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
             dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile(e.dataTransfer.files[0]);
+            }
         });
 
-        function updateFileDisplay(file) {
-            if (file) {
-                if (file.type !== 'application/pdf') {
-                    fileInfo.textContent = "Error: Please select a PDF file";
-                    fileInfo.classList.add('error');
-                    fileInfo.style.display = 'block';
-                    submitBtn.disabled = true;
-                    return;
-                }
-                fileInfo.textContent = file.name;
-                fileInfo.classList.remove('error');
-                fileInfo.style.display = 'block';
-                submitBtn.disabled = false;
-            } else {
-                fileInfo.style.display = 'none';
+        function handleFile(file) {
+            if (!file) return;
+            if (file.type !== 'application/pdf') {
+                status.textContent = "Only PDF files are supported.";
+                status.className = "status-msg error";
                 submitBtn.disabled = true;
+                dropZone.classList.remove('has-file');
+                return;
             }
+
+            // Success state
+            dropZone.classList.add('has-file');
+            uploadText.textContent = "Selected File";
+            fileNameDisplay.innerHTML = `<strong>${file.name}</strong>`;
+            status.textContent = "";
+            submitBtn.disabled = false;
         }
 
-        // Handle Submit
+        // Form Submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            status.textContent = "Converting... this may take a moment.";
-            status.classList.remove('error');
+
+            // UI Loading State
             submitBtn.disabled = true;
-            submitBtn.textContent = "Processing...";
+            submitBtn.innerHTML = '<span class="loader"></span> Converting...';
+            status.textContent = "";
 
             const formData = new FormData(form);
 
@@ -253,23 +405,27 @@
                 });
 
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error || 'Conversion failed');
+                    // Check if headers indicate restricted access (since we return HTML for 403)
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Conversion failed');
+                    } else {
+                        throw new Error('Conversion failed or Access Restricted');
+                    }
                 }
 
-                // Create a blob from the response
+                // Handle file download
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
 
-                // Get filename from header or default
-                let filename = "images.zip";
+                let filename = "download";
                 const disposition = response.headers.get('Content-Disposition');
                 if (disposition && disposition.indexOf('attachment') !== -1) {
-                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                    const matches = filenameRegex.exec(disposition);
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
                     if (matches != null && matches[1]) {
                         filename = matches[1].replace(/['"]/g, '');
                     }
@@ -280,15 +436,15 @@
                 a.click();
                 window.URL.revokeObjectURL(url);
 
-                status.textContent = "Done! Download started.";
-                submitBtn.textContent = "Convert Another";
-                submitBtn.disabled = false;
+                status.textContent = "Conversion successful!";
+                status.className = "status-msg success";
 
             } catch (error) {
                 console.error(error);
                 status.textContent = "Error: " + error.message;
-                status.classList.add('error');
-                submitBtn.textContent = "Try Again";
+                status.className = "status-msg error";
+            } finally {
+                submitBtn.innerHTML = "Convert PDF";
                 submitBtn.disabled = false;
             }
         });
