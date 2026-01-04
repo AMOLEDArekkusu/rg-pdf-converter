@@ -24,7 +24,7 @@ LARK_APP_ID = os.environ.get("LARK_APP_ID", "cli_a9dc3e836cf8de1a")
 LARK_APP_SECRET = os.environ.get("LARK_APP_SECRET", "HhKemh5woyoZBJCjUrqXwbRRvogvrV81")
 # Note: For production, this should be your actual domain callback
 # e.g., https://your-app.azurewebsites.net/callback
-LARK_REDIRECT_URI = os.environ.get("LARK_REDIRECT_URI", "http://localhost:5000/callback")
+LARK_REDIRECT_URI = os.environ.get("LARK_REDIRECT_URI", "https://my-pdf-tool-lark.azurewebsites.net/callback")
 
 @app.before_request
 def restrict_to_lark_app():
