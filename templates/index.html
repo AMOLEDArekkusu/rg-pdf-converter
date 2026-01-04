@@ -417,11 +417,8 @@
 
                 // Handle file download
                 const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
 
+                // Extract filename from headers
                 let filename = "download";
                 const disposition = response.headers.get('Content-Disposition');
                 if (disposition && disposition.indexOf('attachment') !== -1) {
@@ -431,10 +428,38 @@
                     }
                 }
 
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
+                try {
+                    // Try "Save As" API first
+                    if ('showSaveFilePicker' in window) {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: filename,
+                            types: [{
+                                description: 'Converted File',
+                                accept: {
+                                    [blob.type]: [`.${filename.split('.').pop()}`]
+                                },
+                            }],
+                        });
+                        const writable = await handle.createWritable();
+                        await writable.write(blob);
+                        await writable.close();
+                    } else {
+                        // Fallback to classic download
+                        throw new Error("API not supported");
+                    }
+                } catch (err) {
+                    // Fallback if API not supported or user cancelled (though cancel throws AbortError)
+                    if (err.name !== 'AbortError') {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    }
+                }
 
                 status.textContent = "Conversion successful!";
                 status.className = "status-msg success";
