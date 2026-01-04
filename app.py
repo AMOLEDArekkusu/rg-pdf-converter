@@ -44,42 +44,89 @@ def convert_pdf():
         return jsonify({"error": "File must be a PDF"}), 400
 
     try:
-        # Read file into memory (no need to save to disk for web apps)
+        # Read file into memory
         pdf_stream = file.read()
         doc = fitz.open(stream=pdf_stream, filetype="pdf")
         
-        # Prepare a ZIP file in memory to return multiple images
-        zip_buffer = io.BytesIO()
+        # Get Options
+        output_format = request.form.get('format', 'png').lower()
+        use_zip = request.form.get('use_zip', 'true') == 'true'
+        dpi = int(request.form.get('dpi', 200))
         
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            # Get DPI from request or default to 200
-            dpi = int(request.form.get('dpi', 200))
-            zoom = dpi / 72
-            matrix = fitz.Matrix(zoom, zoom)
+        # Base filename without extension
+        base_filename = os.path.splitext(file.filename)[0]
+
+        files_to_return = [] # List of (filename, bytes, mimetype)
+
+        # Process Pages
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)
             
-            # Loop through pages
-            for page_num in range(len(doc)):
-                page = doc.load_page(page_num)
-                pix = page.get_pixmap(matrix=matrix)
+            if output_format == 'svg':
+                content = page.get_svg_image()
+                # SVG returns string, convert to bytes
+                content = content.encode('utf-8')
+                ext = 'svg'
+                mime = 'image/svg+xml'
+            else:
+                # Raster formats (PNG, JPEG)
+                zoom = dpi / 72
+                matrix = fitz.Matrix(zoom, zoom)
                 
-                # Convert to PNG binary data
-                img_data = pix.tobytes("png")
-                
-                # Add to zip
-                filename = f"page_{page_num + 1:03d}.png"
-                zip_file.writestr(filename, img_data)
+                # Check for JPEG specific handling (needs no alpha)
+                alpha = True
+                if output_format in ['jpg', 'jpeg']:
+                    alpha = False
+                    ext = 'jpg'
+                    mime = 'image/jpeg'
+                else:
+                    ext = 'png'
+                    mime = 'image/png'
+
+                pix = page.get_pixmap(matrix=matrix, alpha=alpha)
+                content = pix.tobytes(ext)
+
+            # Define per-page filename
+            # If single page, just use base name. If multi, add page number.
+            if len(doc) == 1:
+                page_filename = f"{base_filename}.{ext}"
+            else:
+                page_filename = f"{base_filename}_page_{page_num + 1:03d}.{ext}"
+            
+            files_to_return.append({
+                'name': page_filename,
+                'data': content,
+                'mime': mime
+            })
 
         doc.close()
-        
-        # Finalize ZIP
-        zip_buffer.seek(0)
-        
-        return send_file(
-            zip_buffer,
-            mimetype='application/zip',
-            as_attachment=True,
-            download_name=f"{os.path.splitext(file.filename)[0]}_images.zip"
-        )
+
+        # Decision: Zip or Single File
+        # Force zip if multiple files, otherwise respect user choice
+        should_zip = use_zip or len(files_to_return) > 1
+
+        if should_zip:
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for item in files_to_return:
+                    zip_file.writestr(item['name'], item['data'])
+            
+            zip_buffer.seek(0)
+            return send_file(
+                zip_buffer,
+                mimetype='application/zip',
+                as_attachment=True,
+                download_name=f"{base_filename}_images.zip"
+            )
+        else:
+            # Return single file
+            single_file = files_to_return[0]
+            return send_file(
+                io.BytesIO(single_file['data']),
+                mimetype=single_file['mime'],
+                as_attachment=True,
+                download_name=single_file['name']
+            )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
