@@ -20,8 +20,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-in-prod")
 
 # Lark Configuration
-LARK_APP_ID = os.environ.get("cli_a9dc3e836cf8de1a", "")
-LARK_APP_SECRET = os.environ.get("HhKemh5woyoZBJCjUrqXwbRRvogvrV81", "")
+LARK_APP_ID = os.environ.get("LARK_APP_ID", "cli_a9dc3e836cf8de1a")
+LARK_APP_SECRET = os.environ.get("LARK_APP_SECRET", "HhKemh5woyoZBJCjUrqXwbRRvogvrV81")
 # Note: For production, this should be your actual domain callback
 # e.g., https://your-app.azurewebsites.net/callback
 LARK_REDIRECT_URI = os.environ.get("LARK_REDIRECT_URI", "http://localhost:5000/callback")
