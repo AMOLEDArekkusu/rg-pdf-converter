@@ -36,15 +36,21 @@ def restrict_to_lark_app():
     # Check User-Agent
     ua = request.headers.get('User-Agent', '')
     if 'Lark' not in ua and 'Feishu' not in ua:
-        # Optional: Allow local dev testing if needed
-        # return None 
+        # Redirect standard browsers to open the app inside Lark Client
         return """
-        <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-            <h1>Access Restricted</h1>
-            <p>This tool is only accessible internally within the Lark / Feishu Suite.</p>
-            <p style="color: gray;">Please open this app from your Workspace.</p>
-        </div>
-        """, 403
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Opening in Lark...</title>
+            <script>
+                window.location.href = 'https://applink.larksuite.com/T92N3kNZSjcF';
+            </script>
+        </head>
+        <body>
+            <p>Redirecting to Lark...</p>
+        </body>
+        </html>
+        """, 200
 
 def get_tenant_access_token():
     """Gets the internal tenant access token for Bot operations."""
